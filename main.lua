@@ -1,10 +1,9 @@
--- Universal Dupe GUI by savalied37 (Rayfield - Enlace Original)
+-- Dupe GUI Universal (Savalied Base - Sintaxis Limpia)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 local success, Rayfield = pcall(function()
-    -- Volvemos a tu enlace original tal y como lo tenías
     return loadstring(game:HttpGet("https://sirius.menu"))()
 end)
 
@@ -18,7 +17,7 @@ if not success or type(Rayfield) ~= "table" then
 end
 
 local Window = Rayfield:CreateWindow({
-    Name = "Universal Dupe GUI",
+    Name = "dupe gui by savalied37",
     LoadingTitle = "Dupe GUI",
     LoadingSubtitle = "by savalied37",
     ConfigurationSaving = {
@@ -36,30 +35,31 @@ local dupeCount = 1
 local pickupCount = 5
 local backpackItems = {}
 
-local function getClosestItem(maxDist, itemName)
+local function getClosestItem(maxDist)
     local closest = nil
     local closestDist = maxDist or 40
-    local character = LocalPlayer.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
 
-    local itemsFolder = workspace:FindFirstChild("Items") or workspace
-    
-    for _, item in pairs(itemsFolder:GetDescendants()) do
-        if item:IsA("Model") or item:IsA("BasePart") or item:IsA("Tool") then
-            local targetPart = item:IsA("Model") and item.PrimaryPart or (item:IsA("BasePart") and item or nil)
-            if not targetPart and item:FindFirstChildWhichIsA("BasePart") then
-                targetPart = item:FindFirstChildWhichIsA("BasePart")
-            end
+    local itemsFolder = workspace:FindFirstChild("Items")
+    if not itemsFolder then return nil end
 
-            if targetPart and not item:IsDescendantOf(character) then
-                if not itemName or (item.Name:lower() == itemName:lower() or item.Name == "Weapon") then
-                    local dist = (hrp.Position - targetPart.Position).Magnitude
-                    if dist < closestDist then
-                        closest = item
-                        closestDist = dist
-                    end
+    for _, item in pairs(itemsFolder:GetChildren()) do
+        -- Busca Mjolnir, Bone Scythe o cualquier item seleccionado en la interfaz
+        if item:IsA("Model") and (item.Name == selectedItem or item.Name == "Weapon" or item.Name == "Mjolnir") then
+            local targetPart = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart")
+            if targetPart then
+                local dist = (hrp.Position - targetPart.Position).Magnitude
+                if dist < closestDist then
+                    closest = item
+                    closestDist = dist
                 end
+            end
+        elseif item:IsA("BasePart") and (item.Name == selectedItem or item.Name == "Mjolnir") then
+            local dist = (hrp.Position - item.Position).Magnitude
+            if dist < closestDist then
+                closest = item
+                closestDist = dist
             end
         end
     end
@@ -73,34 +73,37 @@ local function refreshBackpackList()
             table.insert(backpackItems, item.Name)
         end
     end
-    if LocalPlayer.Character then
-        for _, item in pairs(LocalPlayer.Character:GetChildren()) do
-            if item:IsA("Tool") and not table.find(backpackItems, item.Name) then
-                table.insert(backpackItems, item.Name)
-            end
-        end
-    end
     if #backpackItems == 0 then table.insert(backpackItems, "Empty") end
     return backpackItems
 end
 
-local function findAnyItemModel(itemName)
-    local character = LocalPlayer.Character
-    if not character then return nil end
-
-    local searchTargets = {character, workspace:FindFirstChild("player"), workspace:FindFirstChild(LocalPlayer.Name)}
-    for _, target in pairs(searchTargets) do
-        if target then
-            for _, obj in pairs(target:GetChildren()) do
-                if obj:IsA("Model") and (obj.Name == itemName or obj.Name == "Weapon") then
-                    return obj
-                end
-            end
-        end
+local function findItemModel(itemName)
+    local playerFolder = workspace:FindFirstChild("player")
+    if playerFolder then
+        local model = playerFolder:FindFirstChild(itemName) or playerFolder:FindFirstChild("Weapon")
+        if model and model:IsA("Model") then return model end
     end
 
+    local playerModel = workspace:FindFirstChild(LocalPlayer.Name)
+    if playerModel then
+        local model = playerModel:FindFirstChild(itemName) or playerModel:FindFirstChild("Weapon")
+        if model and model:IsA("Model") then return model end
+    end
+
+    local character = LocalPlayer.Character
+    if character then
+        for _, obj in pairs(character:GetChildren()) do
+            if obj:IsA("Model") and (obj.Name == itemName or obj.Name == "Weapon") then return obj end
+        end
+    end
+    return nil
+end
+
+local function findWeaponModel()
+    local character = LocalPlayer.Character
+    if not character then return nil end
     for _, obj in pairs(character:GetDescendants()) do
-        if obj:IsA("Model") and (obj.Name == itemName or obj.Name == "Weapon") then
+        if obj:IsA("Model") and (obj.Name == "Weapon" or obj.Name == selectedItem) then
             return obj
         end
     end
@@ -122,42 +125,37 @@ local function doDupe(itemName, times, pickups)
         Rayfield:Notify({ Title = "Dupe GUI", Content = "Cycle " .. i .. "/" .. times, Duration = 2 })
 
         local tool = Backpack:FindFirstChild(itemName)
-        local character = LocalPlayer.Character
-        if not character then return end
-
-        local equippedTool = character:FindFirstChild(itemName)
-        if equippedTool then 
-            equippedTool.Parent = Backpack 
-            task.wait(0.1)
-            tool = Backpack:FindFirstChild(itemName)
-        end
-
         if not tool then
             Rayfield:Notify({ Title = "Error", Content = "Tool '" .. itemName .. "' not found!", Duration = 3 })
             return
         end
 
+        local character = LocalPlayer.Character
+        if not character then return end
+
         local humanoid = character:FindFirstChildOfClass("Humanoid")
         if humanoid then humanoid:EquipTool(tool) end
         task.wait(0.3)
 
-        equippedTool = character:FindFirstChildOfClass("Tool")
+        local equippedTool = character:FindFirstChildOfClass("Tool")
         if equippedTool then equippedTool.Parent = Backpack end
         task.wait(0.3)
 
-        local itemModel = findAnyItemModel(itemName)
-        if itemModel then 
-            itemModel.Parent = itemsFolder
-            task.wait(0.2) 
-        end
+        local itemModel = findItemModel(itemName)
+        if itemModel then itemModel.Parent = itemsFolder; task.wait(0.2) end
+
+        local weaponModel = findWeaponModel()
+        if weaponModel then weaponModel.Parent = itemsFolder; task.wait(0.2) end
 
         task.wait(0.3)
 
         for p = 1, pickups do
-            local closestItem = getClosestItem(40, itemName)
+            local closestItem = getClosestItem(40)
             if closestItem then
-                -- CORREGIDO: Añadidos los índices [1] y [2] correctos de los argumentos
-                local args = { [1] = "Pickup", [2] = closestItem }
+                -- Formato alternativo sin corchetes numéricos para evitar errores de sintaxis
+                local args = {}
+                table.insert(args, "Pickup")
+                table.insert(args, closestItem)
                 ReplicatedStorage.Inventory:FireServer(unpack(args))
                 successfulPickups = successfulPickups + 1
                 task.wait(0.2)
@@ -170,13 +168,14 @@ local function doDupe(itemName, times, pickups)
     Rayfield:Notify({ Title = "Dupe GUI", Content = "Sending to Vault...", Duration = 3 })
 
     local vaultSuccess = 0
-    local safeItems = LocalPlayer:FindFirstChild("SafeItems") or LocalPlayer:FindFirstChild("Inventory")
-    
     for i = 1, totalPickups do
+        local safeItems = LocalPlayer:FindFirstChild("SafeItems")
         if safeItems then
             local vaultItem = safeItems:FindFirstChild(itemName)
             if vaultItem then
-                local args = { "Vault", vaultItem }
+                local args = {}
+                table.insert(args, "Vault")
+                table.insert(args, vaultItem)
                 ReplicatedStorage:WaitForChild("Vault"):FireServer(unpack(args))
                 vaultSuccess = vaultSuccess + 1
                 task.wait(0.2)
@@ -187,7 +186,6 @@ local function doDupe(itemName, times, pickups)
     Rayfield:Notify({ Title = "Complete!", Content = "Pickup: " .. successfulPickups .. " | Vault: " .. vaultSuccess, Duration = 4 })
 end
 
--- [ INTERFAZ GRÁFICA RAYFIELD ]
 local MainTab = Window:CreateTab("Main", 4483362458)
 MainTab:CreateSection("Settings")
 
@@ -197,7 +195,7 @@ local ItemDropdown = MainTab:CreateDropdown({
     CurrentOption = {},
     MultipleOptions = false,
     Flag = "SelectedItem",
-    Callback = function(Option) selectedItem = Option or Option end
+    Callback = function(Option) selectedItem = Option[1] or Option end
 })
 
 MainTab:CreateSlider({
@@ -216,7 +214,7 @@ MainTab:CreateDropdown({
     CurrentOption = {"5"},
     MultipleOptions = false,
     Flag = "PickupCount",
-    Callback = function(Option) pickupCount = tonumber(Option or Option) or 5 end
+    Callback = function(Option) pickupCount = tonumber(Option[1] or Option) or 5 end
 })
 
 MainTab:CreateButton({
@@ -247,11 +245,13 @@ MainTab:CreateButton({
     Name = "Vault (1x)",
     Callback = function()
         if selectedItem == "" or selectedItem == "Empty" then return end
-        local safeItems = LocalPlayer:FindFirstChild("SafeItems") or LocalPlayer:FindFirstChild("Inventory")
+        local safeItems = LocalPlayer:FindFirstChild("SafeItems")
         if safeItems then
             local vaultItem = safeItems:FindFirstChild(selectedItem)
             if vaultItem then
-                local args = { "Vault", vaultItem }
+                local args = {}
+                table.insert(args, "Vault")
+                table.insert(args, vaultItem)
                 ReplicatedStorage:WaitForChild("Vault"):FireServer(unpack(args))
                 Rayfield:Notify({ Title = "Vault", Content = "Sent: " .. selectedItem, Duration = 2 })
             end
@@ -262,12 +262,12 @@ MainTab:CreateButton({
 MainTab:CreateButton({
     Name = "Quick Pickup x5",
     Callback = function()
-        local targetName = (selectedItem ~= "" and selectedItem ~= "Empty") and selectedItem or nil
         for i = 1, 5 do
-            local item = getClosestItem(40, targetName)
+            local item = getClosestItem(40)
             if item then
-                -- CORREGIDO: Añadidos los índices [1] y [2] correctos de los argumentos
-                local args = { [1] = "Pickup", [2] = item }
+                local args = {}
+                table.insert(args, "Pickup")
+                table.insert(args, item)
                 ReplicatedStorage.Inventory:FireServer(unpack(args))
                 task.wait(0.15)
             end
@@ -279,5 +279,5 @@ MainTab:CreateButton({
 task.spawn(function()
     task.wait(1)
     local list = refreshBackpackList()
-    if #list > 0 and list ~= "Empty" then selectedItem = list end
+    if #list > 0 and list[1] ~= "Empty" then selectedItem = list[1] end
 end)
