@@ -4,13 +4,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 local success, Rayfield = pcall(function()
-    return loadstring(game:HttpGet("https://sirius.menu"))()
+    -- Borra la línea vieja que usaba sirius.menu y pon esta:
+    return loadstring(game:HttpGet("https://githubusercontent.com"))()
 end)
 
 if not success or type(Rayfield) ~= "table" then
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Error",
-        Text = "Failed to load Rayfield! Enable VPN.",
+        Text = "Failed to load Rayfield! try again ivan",
         Duration = 10
     })
     return
