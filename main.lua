@@ -1,4 +1,4 @@
--- Dupe GUI Universal (Savalied Base - Sintaxis Limpia)
+-- Dupe GUI Universal (Savalied Base - NOT WORKING ANYMORE)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
