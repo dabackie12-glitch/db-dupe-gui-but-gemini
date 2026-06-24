@@ -5,7 +5,9 @@ local LocalPlayer = Players.LocalPlayer
 
 local success, Rayfield = pcall(function()
     -- Borra la línea vieja que usaba sirius.menu y pon esta:
-    return loadstring(game:HttpGet("https://githubusercontent.com"))()
+    -- Borra el anterior y pon este link espejo en el HttpGet:
+    return loadstring(game:HttpGet("https://pastebin.com"))()
+
 end)
 
 if not success or type(Rayfield) ~= "table" then
