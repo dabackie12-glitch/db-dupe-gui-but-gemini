@@ -1,19 +1,17 @@
--- Universal Dupe GUI by savalied37 (Rayfield)
+-- Universal Dupe GUI by savalied37 (Rayfield - Enlace Original)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 local success, Rayfield = pcall(function()
-    -- Borra la línea vieja que usaba sirius.menu y pon esta:
-    -- Borra el anterior y pon este link espejo en el HttpGet:
-    return loadstring(game:HttpGet("https://pastebin.com"))()
-
+    -- Volvemos a tu enlace original tal y como lo tenías
+    return loadstring(game:HttpGet("https://sirius.menu"))()
 end)
 
 if not success or type(Rayfield) ~= "table" then
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Error",
-        Text = "Failed to load Rayfield! try again ivan",
+        Text = "Failed to load Rayfield! Enable VPN.",
         Duration = 10
     })
     return
@@ -38,7 +36,6 @@ local dupeCount = 1
 local pickupCount = 5
 local backpackItems = {}
 
--- Busca cualquier parte física del ítem cerca, validando por nombre o proximidad
 local function getClosestItem(maxDist, itemName)
     local closest = nil
     local closestDist = maxDist or 40
@@ -56,7 +53,6 @@ local function getClosestItem(maxDist, itemName)
             end
 
             if targetPart and not item:IsDescendantOf(character) then
-                -- Si no se especifica nombre, busca cualquier cosa. Si se especifica, filtra dinámicamente.
                 if not itemName or (item.Name:lower() == itemName:lower() or item.Name == "Weapon") then
                     local dist = (hrp.Position - targetPart.Position).Magnitude
                     if dist < closestDist then
@@ -88,7 +84,6 @@ local function refreshBackpackList()
     return backpackItems
 end
 
--- Encuentra dinámicamente el modelo físico generado al soltar o equipar el ítem
 local function findAnyItemModel(itemName)
     local character = LocalPlayer.Character
     if not character then return nil end
@@ -161,6 +156,7 @@ local function doDupe(itemName, times, pickups)
         for p = 1, pickups do
             local closestItem = getClosestItem(40, itemName)
             if closestItem then
+                -- CORREGIDO: Añadidos los índices [1] y [2] correctos de los argumentos
                 local args = { [1] = "Pickup", [2] = closestItem }
                 ReplicatedStorage.Inventory:FireServer(unpack(args))
                 successfulPickups = successfulPickups + 1
@@ -201,7 +197,7 @@ local ItemDropdown = MainTab:CreateDropdown({
     CurrentOption = {},
     MultipleOptions = false,
     Flag = "SelectedItem",
-    Callback = function(Option) selectedItem = Option[1] or Option end
+    Callback = function(Option) selectedItem = Option or Option end
 })
 
 MainTab:CreateSlider({
@@ -220,7 +216,7 @@ MainTab:CreateDropdown({
     CurrentOption = {"5"},
     MultipleOptions = false,
     Flag = "PickupCount",
-    Callback = function(Option) pickupCount = tonumber(Option[1] or Option) or 5 end
+    Callback = function(Option) pickupCount = tonumber(Option or Option) or 5 end
 })
 
 MainTab:CreateButton({
@@ -266,11 +262,11 @@ MainTab:CreateButton({
 MainTab:CreateButton({
     Name = "Quick Pickup x5",
     Callback = function()
-        -- Pasa el objeto seleccionado para que recoja el correcto
         local targetName = (selectedItem ~= "" and selectedItem ~= "Empty") and selectedItem or nil
         for i = 1, 5 do
             local item = getClosestItem(40, targetName)
             if item then
+                -- CORREGIDO: Añadidos los índices [1] y [2] correctos de los argumentos
                 local args = { [1] = "Pickup", [2] = item }
                 ReplicatedStorage.Inventory:FireServer(unpack(args))
                 task.wait(0.15)
@@ -283,5 +279,5 @@ MainTab:CreateButton({
 task.spawn(function()
     task.wait(1)
     local list = refreshBackpackList()
-    if #list > 0 and list[1] ~= "Empty" then selectedItem = list[1] end
+    if #list > 0 and list ~= "Empty" then selectedItem = list end
 end)
